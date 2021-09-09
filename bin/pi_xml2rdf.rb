@@ -948,10 +948,11 @@ module PI # package insert
       i = 0
       @n3 << triple(subj, "a", "pio:PI_3_2")
       e.each do |k, v|
-        @n3 << triple(subj, "pio:", "#{subj}.item#{i}")
+#        @n3 << triple(subj, "pio:", "#{subj}.item#{i}")
 
         v.each do |elm|
           i += 1
+          @n3 << triple(subj, "pio:property_for_brand", "#{subj}.item#{i}")
           property_table = elm[:property_for_constituent_units][0][:property_table][0]
           property_table.keys.each do |key|
             case key
