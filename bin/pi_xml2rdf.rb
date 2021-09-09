@@ -74,7 +74,8 @@ module PI # package insert
     "dct:" => "http://purl.org/dc/terms/",
     "pi_root:" => "http://med2rdf.org/pi/",
     "pio:" => "http://med2rdf.org/ontology/pio/",
-    "bibo:" => "http://purl.org/ontology/bibo/"
+    "bibo:" => "http://purl.org/ontology/bibo/",
+    "xsd:" => "http://www.w3.org/2001/XMLSchema#"
   }
 
   def prefixes
@@ -726,7 +727,7 @@ module PI # package insert
       @n3 << triple("pi_root:#{@pino}", "dct:identifier", "\"#{@pino}\"") 
       @n3 << triple("pi_root:#{@pino}", "pio:company_identifier", t('PackIns/CompanyIdentifier'))
       @n3 << triple("pi_root:#{@pino}", "pio:date_of_preparation_or_revision",
-                    t('PackIns/DateOfPreparationOrRevision/PreparationOrRevision/YearMonth'))
+                    "#{t('PackIns/DateOfPreparationOrRevision/PreparationOrRevision/YearMonth')}^^xsd:date")
 
       @n3 << triple("pi_root:#{@pino}", "pio:version", 
                     t('PackIns/DateOfPreparationOrRevision/PreparationOrRevision/Version/Lang'))
@@ -750,7 +751,7 @@ module PI # package insert
       @n3 << triple("pi_root:#{@pino}", "pio:license_no",
                     t('//DetailBrandName/ApprovalAndLicenseNo/LicenseNo'))
       @n3 << triple("pi_root:#{@pino}", "pio:starting_date_of_marketing",
-                    t('//DetailBrandName/StartingDateOfMarketing'))
+                    "#{t('//DetailBrandName/StartingDateOfMarketing')}^^xsd:date")
       @n3 << triple("pi_root:#{@pino}", "pio:storage_method",
                     t('//DetailBrandName/Storage/StorageMethod/Lang'))
       @n3 << triple("pi_root:#{@pino}", "pio:shelf_life",
