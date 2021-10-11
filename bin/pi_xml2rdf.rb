@@ -544,6 +544,7 @@ module PI # package insert
     end
 
     def make_redundant_table(h)
+#      pp h
       table = {}
       table[:simple_table] = Array.new(h[:rows]).map{Array.new(h[:cols]){nil}}
       table[:width_definition] = h[:width_definition]
@@ -552,21 +553,41 @@ module PI # package insert
       (0..h[:rows] - 1).each do |i|
         offset = 0
         (0..h[:cols] - 1).each do |j|
+#          pp table[:simple_table]
 #          STDERR.print "i: #{i}, j: #{j}, offset: #{offset}\n"
           if table[:simple_table][i][j] == nil
             unless table[:original_table][i][j - offset] == nil
               if table[:original_table][i][j - offset].key?(:rspan) && 
-                rspan = table[:original_table][i][j][:rspan].to_i
+                table[:original_table][i][j - offset].key?(:cspan)
+                rspan = table[:original_table][i][j - offset][:rspan].to_i
+                cspan = table[:original_table][i][j - offset][:cspan].to_i
+                (0..rspan - 1).each do |idx_i|
+                  (0..cspan - 1).each do |idx_j|
+                     table[:simple_table][i + idx_i][j + idx_j] = cell_text(table[:original_table][i][j - offset])
+#                    if table[:original_table][i][j - offset].key?(:unordered_list)
+#                      table[:simple_table][i + idx_i][j + idx_j] 
+#                        = merge_list_items(table[:original_table][i][j - offset][:unordered_list]
+#                    else
+#                      table[:simple_table][i + idx_i][j + idx_j] = table[:original_table][i][j - offset][:detail][0][:text]
+#                    end
+                  end
+                end
+
+              elsif table[:original_table][i][j - offset].key?(:rspan)
+                rspan = table[:original_table][i][j - offset][:rspan].to_i
                 (0..rspan - 1).each do |idx|
-                  table[:simple_table][i + idx][j] = table[:original_table][i][j - offset][:detail][0][:text]
+                  table[:simple_table][i + idx][j] = cell_text(table[:original_table][i][j - offset])
+#                  table[:simple_table][i + idx][j] = table[:original_table][i][j - offset][:detail][0][:text]
                 end
               elsif table[:original_table][i][j - offset].key?(:cspan)
                 cspan = table[:original_table][i][j - offset][:cspan].to_i
                 (0..cspan - 1).each do |idx|
-                  table[:simple_table][i][j + idx] = table[:original_table][i][j - offset][:detail][0][:text]
+                  table[:simple_table][i][j + idx] = cell_text(table[:original_table][i][j - offset])
+#                  table[:simple_table][i][j + idx] = table[:original_table][i][j - offset][:detail][0][:text]
                 end
               else
-                table[:simple_table][i][j] = table[:original_table][i][j - offset][:detail][0][:text]
+                table[:simple_table][i][j] = cell_text(table[:original_table][i][j - offset])
+#                table[:simple_table][i][j] = table[:original_table][i][j - offset][:detail][0][:text]
               end
             end
           else
@@ -575,6 +596,22 @@ module PI # package insert
         end
       end
       table
+    end
+
+    def cell_text(h)
+      if h.key?(:unordered_list)
+        merge_list_items(h[:unordered_list])
+      else
+        h[:detail][0][:text]
+      end
+    end
+
+    def merge_list_items(a)
+      tmp_list = []
+      a.each do |item|
+        tmp_list << item[:detail][0][0][:text]
+      end
+      tmp_list.join("\n")
     end
 
     def simple_table(e)
@@ -630,14 +667,17 @@ module PI # package insert
 
     def graphic(e)
       a = []
-      m = e.name.to_snake.to_sym
-      case m
-      when :graphic_caption
-        send(m, e)
-      when :graphic_body
-        graphic_body(e)
-      else
+      e.each_element do |elm|
+        m = elm.name.to_snake.to_sym
+        case m
+        when :graphic_caption
+          a << send(m, elm)
+        when :graphic_body
+          a << graphic_body(elm)
+        else
+        end
       end
+      a
     end
 
     def graphic_caption(e)
@@ -645,7 +685,11 @@ module PI # package insert
     end
 
     def graphic_body(e)
-
+      h = {}
+      e.attributes.each_key do |k|
+        h[k] = e.attributes[k]
+      end
+      h
     end
 
     def width_definition(e)
@@ -871,11 +915,10 @@ module PI # package insert
 
     def composition_rdf(e)
       subj = "pi:PI_3_1"
-      i = 0
+      i = 1
 #      @n3 << triple(subj, "a", "pio:PI_3_1") 
       e.each do |k, v|
         if k == :composition_for_brand
-          i += 1
           @n3 << triple(subj, "pio:composition_for_brand", "#{subj}.item#{i}")
           v.each do |elm|
             contained_amount = elm[:composition_for_constituent_units][0][:composition_table][0][:contained_amount][0]
@@ -902,8 +945,20 @@ module PI # package insert
             end
            
             additives = elm[:composition_for_constituent_units][0][:composition_table][0][:additives] 
-            if additives.key?(:list_of_additives) 
+            if additives.key?(:list_of_additives)
               @n3 << triple("#{subj}.item#{i}", "pio:additives", "\"#{additives[:list_of_additives][0][:lang][:text]}\"@ja")
+              list_of_additives = []
+              if /、/ =~ additives[:list_of_additives][0][:lang][:text]
+                list_of_additives = additives[:list_of_additives][0][:lang][:text].split("、")
+              elsif /　/ =~ additives[:list_of_additives][0][:lang][:text]
+                list_of_additives = additives[:list_of_additives][0][:lang][:text].split("　")
+              elsif / / =~ additives[:list_of_additives][0][:lang][:text]
+                list_of_additives = additives[:list_of_additives][0][:lang][:text].split(" ")
+              end
+              list_of_additives.each.with_index(1) do |additive, j|
+                @n3 << triple("#{subj}.item#{i}", "pio:info_individual_additives", "#{subj}.item#{i}.additive#{j}")
+                @n3 << triple("#{subj}.item#{i}.additive#{j}", "pio:additive", "\"#{additive}\"@ja")
+              end
             elsif additives.key?(:individual_additives) 
               additives[:individual_additives].each.with_index(1) do |additive, j|
 #                @n3 << triple("#{subj}.item#{i}", "pio:info_individual_additives", "#{subj}.item#{i}.item#{j}")
@@ -915,7 +970,7 @@ module PI # package insert
               end
             else 
             end 
-
+            i += 1
 #            @n3 << triple("#{subj}.item#{i}", "a", "pio:PI_3_1")
           end
         elsif k == :composition_comments
@@ -2196,13 +2251,12 @@ module PI # package insert
              :nature            , :nucleophysical_properties
           n3 << triple(subj, "pio:#{m}", "\"#{various_forms_type(elm)[:detail][0][0][:text]}\"")
         when :physchem_of_act_ingredients_section_title
-          n3 << triple(subj, "pio:#{m}", "\"#{cdata_content_type(elm)}\"")
+          n3 << triple(subj, "pio:#{m}", "\"#{cdata_content_type(elm)[0][:lang][:text]}\"")
         else
         end
       end
       n3
     end
-
   end
 
   class PrecautionsForHandling < RDF
@@ -2328,8 +2382,15 @@ module PI # package insert
             @n3 << triple("#{subj}.item#{i}", "pio:address", "\"#{address}\"@ja")
           end
           unless e.elements['ContactInformation'] == nil
-            contact_information = various_forms_type(e.elements['ContactInformation'])[:detail][0][0][:text]
-            @n3 << triple("#{subj}.item#{i}", "pio:contact_information", "\"#{contact_information}\"@ja")
+#            contact_information = various_forms_type(e.elements['ContactInformation'])[:detail][0][0][:text]
+            contact_information = various_forms_type(e.elements['ContactInformation'])
+            if contact_information.key?(:detail)
+              contact_info = contact_information[:detail][0][0][:text]
+              @n3 << triple("#{subj}.item#{i}", "pio:contact_information", "\"#{contact_info}\"@ja")
+            elsif contact_information.key?(:graphic)
+              @n3 << triple("#{subj}.item#{i}", "pio:contact_information", "\"#{contact_information[:graphic][0][0]["gfname"]}\"")
+            else
+            end
           end
         end
       end
