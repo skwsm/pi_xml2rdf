@@ -1845,6 +1845,8 @@ module PI # package insert
     def common_precautions_for_adverse()
       unless @xml.elements['//CommonPrecautionsForAdverse'] == nil
         cdata_content_type(@xml.elements['//CommonPrecautionsForAdverse'])
+      else
+        []
       end
     end
 
@@ -2195,7 +2197,7 @@ module PI # package insert
             @n3 = @n3 + mechanism_of_action(elm)
           when :measurement_method
             i += 1
-            @n3 = @n3 + measurement_method(elm)
+            @n3 = @n3 + measurement_method(elm, i)
           when :other_information
             @n3 = @n3 + other_information_rdf(other_information(elm), subj, i)
             i += 1
