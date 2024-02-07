@@ -377,7 +377,7 @@ module PI # package insert
                       n3 << triple("#{subj}.item#{i}.table#{j}", "pio:row", "#{subj}.item#{i}.table#{j}.row#{k}")
                       row.each.with_index(1) do |col, l|
                         n3 << triple("#{subj}.item#{i}.table#{j}.row#{k}", "pio:column", "#{subj}.item#{i}.table#{j}.row#{k}.column#{l}")
-                        n3 << triple("#{subj}.item#{i}.table#{j}.row#{k}.column#{l}", "rdf:value", "\"#{col}\"")
+                        n3 << triple("#{subj}.item#{i}.table#{j}.row#{k}.column#{l}", "rdf:value", "\'\'\'#{col}\'\'\'")
             
                       end
                     end
@@ -402,7 +402,7 @@ module PI # package insert
                               n3 << triple("#{subj}.item#{i}.item#{m}.table#{n}", "pio:row", "#{subj}.item#{i}.item#{m}.table#{n}.row#{ni}")
                               row2.each.with_index(1) do |col2, nj|
                                 n3 << triple("#{subj}.item#{i}.item#{m}.table#{n}.row#{ni}", "pio:column", "#{subj}.item#{i}.item#{m}.table#{n}.row#{ni}.column#{nj}")
-                                n3 << triple("#{subj}.item#{i}.item#{m}.table#{n}.row#{ni}.column#{nj}", "rdf:value", "\"#{col2}\"")
+                                n3 << triple("#{subj}.item#{i}.item#{m}.table#{n}.row#{ni}.column#{nj}", "rdf:value", "\'\'\'#{col2}\'\'\'")
                               end
                             end
                           end
