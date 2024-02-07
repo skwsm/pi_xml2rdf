@@ -943,33 +943,36 @@ module PI # package insert
                               "\"#{contained_amount[:active_ingredient_additional_info][:value_and_unit][0][:lang][:text]}\"@ja")
               end
             end
-           
+
             additives = elm[:composition_for_constituent_units][0][:composition_table][0][:additives] 
-            if additives.key?(:list_of_additives)
-              @n3 << triple("#{subj}.item#{i}", "pio:additives", "\"#{additives[:list_of_additives][0][:lang][:text]}\"@ja")
-              list_of_additives = []
-              if /、/ =~ additives[:list_of_additives][0][:lang][:text]
-                list_of_additives = additives[:list_of_additives][0][:lang][:text].split("、")
-              elsif /　/ =~ additives[:list_of_additives][0][:lang][:text]
-                list_of_additives = additives[:list_of_additives][0][:lang][:text].split("　")
-              elsif / / =~ additives[:list_of_additives][0][:lang][:text]
-                list_of_additives = additives[:list_of_additives][0][:lang][:text].split(" ")
-              end
-              list_of_additives.each.with_index(1) do |additive, j|
-                @n3 << triple("#{subj}.item#{i}", "pio:info_individual_additives", "#{subj}.item#{i}.additive#{j}")
-                @n3 << triple("#{subj}.item#{i}.additive#{j}", "pio:additive", "\"#{additive}\"@ja")
-              end
-            elsif additives.key?(:individual_additives) 
-              additives[:individual_additives].each.with_index(1) do |additive, j|
-#                @n3 << triple("#{subj}.item#{i}", "pio:info_individual_additives", "#{subj}.item#{i}.item#{j}")
-                @n3 << triple("#{subj}.item#{i}", "pio:info_individual_additives", "#{subj}.item#{i}.additive#{j}")
-                @n3 << triple("#{subj}.item#{i}.additive#{j}", "pio:additive", "\"#{additive[:individual_additive][0][:lang][:text]}\"@ja")
-                if additive.key?(:value_and_unit)
-                  @n3 << triple("#{subj}.item#{i}.additive#{j}", "pio:value_and_unit", "\"#{additive[:value_and_unit][0][:lang][:text]}\"@ja")
+            unless additives == nil
+              if additives.key?(:list_of_additives)
+                @n3 << triple("#{subj}.item#{i}", "pio:additives", "\"#{additives[:list_of_additives][0][:lang][:text]}\"@ja")
+                list_of_additives = []
+                if /、/ =~ additives[:list_of_additives][0][:lang][:text]
+                  list_of_additives = additives[:list_of_additives][0][:lang][:text].split("、")
+                elsif /　/ =~ additives[:list_of_additives][0][:lang][:text]
+                  list_of_additives = additives[:list_of_additives][0][:lang][:text].split("　")
+                elsif / / =~ additives[:list_of_additives][0][:lang][:text]
+                  list_of_additives = additives[:list_of_additives][0][:lang][:text].split(" ")
                 end
-              end
-            else 
-            end 
+                list_of_additives.each.with_index(1) do |additive, j|
+                  @n3 << triple("#{subj}.item#{i}", "pio:info_individual_additives", "#{subj}.item#{i}.additive#{j}")
+                  @n3 << triple("#{subj}.item#{i}.additive#{j}", "pio:additive", "\"#{additive}\"@ja")
+                end
+              elsif additives.key?(:individual_additives) 
+                additives[:individual_additives].each.with_index(1) do |additive, j|
+#                @n3 << triple("#{subj}.item#{i}", "pio:info_individual_additives", "#{subj}.item#{i}.item#{j}")
+                  @n3 << triple("#{subj}.item#{i}", "pio:info_individual_additives", "#{subj}.item#{i}.additive#{j}")
+                  @n3 << triple("#{subj}.item#{i}.additive#{j}", "pio:additive", "\"#{additive[:individual_additive][0][:lang][:text]}\"@ja")
+                  if additive.key?(:value_and_unit)
+                    @n3 << triple("#{subj}.item#{i}.additive#{j}", "pio:value_and_unit", "\"#{additive[:value_and_unit][0][:lang][:text]}\"@ja")
+                  end
+                end
+              
+              else 
+              end 
+            end
             i += 1
 #            @n3 << triple("#{subj}.item#{i}", "a", "pio:PI_3_1")
           end
