@@ -922,29 +922,30 @@ module PI # package insert
           @n3 << triple(subj, "pio:composition_for_brand", "#{subj}.item#{i}")
           v.each do |elm|
             contained_amount = elm[:composition_for_constituent_units][0][:composition_table][0][:contained_amount][0]
-            @n3 << triple("#{subj}.item#{i}", "pio:contained_amount", "#{subj}.item#{i}.contained_amount")
-            if contained_amount.key?(:active_ingredient_name)
-              @n3 << triple("#{subj}.item#{i}.contained_amount", "pio:active_ingredient_name", 
-                            "\"#{contained_amount[:active_ingredient_name][0][:lang][:text]}\"@ja")
-            end
-            if contained_amount.key?(:value_and_unit)
-              @n3 << triple("#{subj}.item#{i}.contained_amount", "pio:value_and_unit", 
-                            "\"#{contained_amount[:value_and_unit][0][:lang][:text]}\"@ja")
-            end
-            if contained_amount.key?(:active_ingredient_additional_info)
-              @n3 << triple("#{subj}.item#{i}.contained_amount", "pio:active_ingredient_additional_info", 
-                            "#{subj}.item#{i}.active_ingredient_additional_info")
-              if contained_amount[:active_ingredient_additional_info].key?(:active_ingredient_name)
-                @n3 << triple("#{subj}.item#{i}.active_ingredient_additional_info", "pio:active_ingredient_name", 
-                              "\"#{contained_amount[:active_ingredient_additional_info][:active_ingredient_name][0][:lang][:text]}\"@ja")
+            unless contained_amount == nil
+              @n3 << triple("#{subj}.item#{i}", "pio:contained_amount", "#{subj}.item#{i}.contained_amount")
+              if contained_amount.key?(:active_ingredient_name)
+                @n3 << triple("#{subj}.item#{i}.contained_amount", "pio:active_ingredient_name", 
+                              "\"#{contained_amount[:active_ingredient_name][0][:lang][:text]}\"@ja")
               end
-              if contained_amount[:active_ingredient_additional_info].key?(:value_and_unit)
-                @n3 << triple("#{subj}.item#{i}.active_ingredient_additional_info", "pio:value_and_unit", 
-                              "\"#{contained_amount[:active_ingredient_additional_info][:value_and_unit][0][:lang][:text]}\"@ja")
+              if contained_amount.key?(:value_and_unit)
+                @n3 << triple("#{subj}.item#{i}.contained_amount", "pio:value_and_unit", 
+                              "\"#{contained_amount[:value_and_unit][0][:lang][:text]}\"@ja")
+              end
+              if contained_amount.key?(:active_ingredient_additional_info)
+                @n3 << triple("#{subj}.item#{i}.contained_amount", "pio:active_ingredient_additional_info", 
+                              "#{subj}.item#{i}.active_ingredient_additional_info")
+                if contained_amount[:active_ingredient_additional_info].key?(:active_ingredient_name)
+                  @n3 << triple("#{subj}.item#{i}.active_ingredient_additional_info", "pio:active_ingredient_name", 
+                                "\"#{contained_amount[:active_ingredient_additional_info][:active_ingredient_name][0][:lang][:text]}\"@ja")
+                end
+                if contained_amount[:active_ingredient_additional_info].key?(:value_and_unit)
+                  @n3 << triple("#{subj}.item#{i}.active_ingredient_additional_info", "pio:value_and_unit", 
+                                "\"#{contained_amount[:active_ingredient_additional_info][:value_and_unit][0][:lang][:text]}\"@ja")
+                end
               end
             end
-
-            additives = elm[:composition_for_constituent_units][0][:composition_table][0][:additives] 
+            additives = elm[:composition_for_constituent_units][0][:composition_table][0][:additives]
             unless additives == nil
               if additives.key?(:list_of_additives)
                 @n3 << triple("#{subj}.item#{i}", "pio:additives", "\"#{additives[:list_of_additives][0][:lang][:text]}\"@ja")
@@ -969,12 +970,56 @@ module PI # package insert
                     @n3 << triple("#{subj}.item#{i}.additive#{j}", "pio:value_and_unit", "\"#{additive[:value_and_unit][0][:lang][:text]}\"@ja")
                   end
                 end
-              
               else 
               end 
             end
+#####
+            other_composition = elm[:composition_for_constituent_units][0][:composition_table][0][:other_composition]
+            unless other_composition == nil
+              j = 1
+              other_composition.each do |oc|
+                @n3 << triple("#{subj}.item#{i}", "pio:other_composition", "#{subj}.item#{i}.other_composition#{j}")
+                c_i = 1
+                oc.each do |oc_k, oc_v|
+                  STDERR.print "#{oc_k}\n"
+                  STDERR.print "#{oc_v.size}\n"
+                  case oc_k
+                  when :category_name
+                    @n3 << triple("#{subj}.item#{i}.other_composition#{j}", "pio:category_name", "\"#{oc_v[0][:lang][:text]}\"@ja")
+                  when :content
+                    oc_v.each do |oc_v_e|
+                      STDERR.print "#{oc_v_e.keys}\n"
+                      STDERR.print "#{oc_v_e}\n"
+                      STDERR.print "#{c_i}\n"
+                      @n3 << triple("#{subj}.item#{i}.other_composition#{j}", "pio:content", "#{subj}.item#{i}.other_composition#{j}.content#{c_i}")
+                      if oc_v_e.key?(:content_title)
+                        if oc_v_e[:content_title][0].key?(:content_title)
+                          @n3 << triple("#{subj}.item#{i}.other_composition#{j}.content#{c_i}", "pio:content_title",
+                                        "\"#{oc_v_e[:content_title][0][:content_title][0][:lang][:text]}\"@ja")
+                        end
+                        if oc_v_e[:content_title].size > 1 && oc_v_e[:content_title][1].key?(:content_detail)
+                          @n3 << triple("#{subj}.item#{i}.other_composition#{j}.content#{c_i}", "pio:content_detail", 
+                                        "\"#{oc_v_e[:content_title][1][:content_detail][0][:lang][:text]}\"@ja")
+                        end
+                      end
+                      if oc_v_e.key?(:content_detail)
+#                        STDERR.print "#{oc_v.size}\n"
+                        if oc_v_e[:content_detail][0].key?(:content_detail)
+                          @n3 << triple("#{subj}.item#{i}.other_composition#{j}.content#{c_i}", "pio:content_detail",
+                                        "\"#{oc_v_e[:content_detail][0][:content_detail][0][:lang][:text]}\"@ja")
+                        end
+                      end
+                      c_i += 1
+                    end
+#                    c_i += 1
+                  else
+                  end
+                end
+                j += 1
+              end
+            end
+#####
             i += 1
-#            @n3 << triple("#{subj}.item#{i}", "a", "pio:PI_3_1")
           end
         elsif k == :composition_comments
           @n3 << triple("#{subj}.item#{i}", "pio:composition_comments", "\"#{v[0][:lang][:text]}\"@ja")
