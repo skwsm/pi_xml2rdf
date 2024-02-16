@@ -784,7 +784,7 @@ module PI # package insert
       @n3 << triple("pi_root:#{@pino}", "pio:version", 
                     t('PackIns/DateOfPreparationOrRevision/PreparationOrRevision/Version/Lang'))
 
-      @n3 << triple("pi_root:#{@pino}", "pio:sccj_no", t('PackIns/Sccj/SccjNo'))
+      @n3 << triple("pi:PI_0_2", "pio:sccj_no", t('PackIns/Sccj/SccjNo'))
 
       @n3 << triple("pi:PI_0_5", "pio:therapeutic_classification",
                     t('//TherapeuticClassification/Detail/Lang'))
@@ -799,13 +799,13 @@ module PI # package insert
 
       @n3 << triple("pi_root:#{@pino}", "pio:name_in_hiragana", 
                     t('//DetailBrandName/BrandNameInHiragana/NameInHiragana'))
-      @n3 << triple("pi_PI_0_3_1", "pio:approval_no",
+      @n3 << triple("pi:PI_0_3_1", "pio:approval_no",
                     t('//DetailBrandName/ApprovalAndLicenseNo/ApprovalNo'))
-      @n3 << triple("pi_root:#{@pino}", "pio:license_no",
+      @n3 << triple("pi:PI_0_3_1", "pio:license_no",
                     t('//DetailBrandName/ApprovalAndLicenseNo/LicenseNo'))
       @n3 << triple("pi:PI_0_3_2", "pio:starting_date_of_marketing",
                     "#{t('//DetailBrandName/StartingDateOfMarketing')}^^xsd:date")
-      @n3 << triple("pi_root:#{@pino}", "pio:storage_method",
+      @n3 << triple("pi:PI_0_4", "pio:storage_method",
                     t('//DetailBrandName/Storage/StorageMethod/Lang'))
       @n3 << triple("pi_root:#{@pino}", "pio:shelf_life",
                     t('//DetailBrandName/Storage/ShelfLife/Lang'))
