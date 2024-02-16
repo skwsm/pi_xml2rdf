@@ -7,6 +7,14 @@ require 'rexml/document'
 module PI # package insert
 
   Sections = ["PI_0",    '',    #
+              "PI_0_1",  'DateOfPreparationOrRevision', #ア. 作成又は改訂年月
+              "PI_0_2",  'Sccj', #イ. 日本標準商品分類番号
+              "PI_0_3_1",'ApprovalAndLicenseNo', #ウ. 承認番号、販売開始年月
+              "PI_0_3_2",'StartingDateOfMarketing', #ウ. 承認番号、販売開始年月
+              "PI_0_4",  'Storage', #エ. 貯法、有効期間
+              "PI_0_5",  'TherapeuticClassification', #オ. 薬効分類名
+              "PI_0_6",  'RegulatoryClassification', #カ. 規制区分
+              "PI_0_7",  'GenericName', #キ. 名称
               "PI_1",    'Warnings', #1. 警告 Warnings
               "PI_2",    'ContraIndications', #2. 禁忌 ContraIndications
               "PI_3",    'CompositionAndProperty', #3. 組成・性状
@@ -777,7 +785,8 @@ module PI # package insert
                     t('PackIns/DateOfPreparationOrRevision/PreparationOrRevision/Version/Lang'))
 
       @n3 << triple("pi_root:#{@pino}", "pio:sccj_no", t('PackIns/Sccj/SccjNo'))
-      @n3 << triple("pi_root:#{@pino}", "pio:therapeutic_classification",
+
+      @n3 << triple("pi:PI_0_5", "pio:therapeutic_classification",
                     t('//TherapeuticClassification/Detail/Lang'))
 
       @n3 << triple("pi_root:#{@pino}", "pio:approval_brand_name",
@@ -790,11 +799,11 @@ module PI # package insert
 
       @n3 << triple("pi_root:#{@pino}", "pio:name_in_hiragana", 
                     t('//DetailBrandName/BrandNameInHiragana/NameInHiragana'))
-      @n3 << triple("pi_root:#{@pino}", "pio:approval_no",
+      @n3 << triple("pi_PI_0_3_1", "pio:approval_no",
                     t('//DetailBrandName/ApprovalAndLicenseNo/ApprovalNo'))
       @n3 << triple("pi_root:#{@pino}", "pio:license_no",
                     t('//DetailBrandName/ApprovalAndLicenseNo/LicenseNo'))
-      @n3 << triple("pi_root:#{@pino}", "pio:starting_date_of_marketing",
+      @n3 << triple("pi:PI_0_3_2", "pio:starting_date_of_marketing",
                     "#{t('//DetailBrandName/StartingDateOfMarketing')}^^xsd:date")
       @n3 << triple("pi_root:#{@pino}", "pio:storage_method",
                     t('//DetailBrandName/Storage/StorageMethod/Lang'))
@@ -900,6 +909,7 @@ module PI # package insert
       h[:composition_for_brand] = []
       e.each_element do |elm|
         m = symbol(elm)
+        STDERR.print "#{m}\n"
         case m
         when :overview_of_composition
           h[:overview_of_composition] = overview_of_composition(elm)
@@ -918,9 +928,14 @@ module PI # package insert
       i = 1
 #      @n3 << triple(subj, "a", "pio:PI_3_1") 
       e.each do |k, v|
+        STDERR.print ">>>>>\n"
+        STDERR.print "#{k}\n"
+        STDERR.print "#{v.size}\n"
+        STDERR.print ">>>>>\n"
         if k == :composition_for_brand
-          @n3 << triple(subj, "pio:composition_for_brand", "#{subj}.item#{i}")
+#          @n3 << triple(subj, "pio:composition_for_brand", "#{subj}.item#{i}")
           v.each do |elm|
+            @n3 << triple(subj, "pio:composition_for_brand", "#{subj}.item#{i}")
             contained_amount = elm[:composition_for_constituent_units][0][:composition_table][0][:contained_amount][0]
             unless contained_amount == nil
               @n3 << triple("#{subj}.item#{i}", "pio:contained_amount", "#{subj}.item#{i}.contained_amount")
