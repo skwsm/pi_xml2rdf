@@ -772,16 +772,30 @@ module PI # package insert
     def pi_sections
       Hash[*Sections].keys.each do |section|
         @n3 << triple("pi_root:#{@pino}", "pio:section", "pi:#{section}")
+        @n3 << triple("pi:#{section}", "a", "pio:#{section}")
       end
     end
 
     def general_info
       @n3 << triple("pi_root:#{@pino}", "dct:identifier", "\"#{@pino}\"") 
       @n3 << triple("pi_root:#{@pino}", "pio:company_identifier", t('PackIns/CompanyIdentifier'))
-      @n3 << triple("pi_root:#{@pino}", "pio:date_of_preparation_or_revision",
-                    "#{t('PackIns/DateOfPreparationOrRevision/PreparationOrRevision/YearMonth')}^^xsd:date")
+      @xml.get_elements('PackIns/DateOfPreparationOrRevision/PreparationOrRevision').each do |preparation_on_revision|
+        if preparation_on_revision.has_attributes?
+          case preparation_on_revision['id']
+          when "前回"
+            @n3 << triple("pi:PI_0_1", "pio:date_of_preparation_or_revision_last_time",
+                          "\"#{preparation_on_revision.elements['YearMonth'].text}\"^^xsd:date")
+#                          "#{t('PackIns/DateOfPreparationOrRevision/PreparationOrRevision/YearMonth')}^^xsd:date")
+          when "今回"
+            @n3 << triple("pi:PI_0_1", "pio:date_of_preparation_or_revision",
+                          "\"#{preparation_on_revision.elements['YearMonth'].text}\"^^xsd:date")
+#                          "#{t('PackIns/DateOfPreparationOrRevision/PreparationOrRevision/YearMonth')}^^xsd:date")
+          else
+          end
+        end
+      end
 
-      @n3 << triple("pi_root:#{@pino}", "pio:version", 
+      @n3 << triple("pi:PI_0_1", "pio:version", 
                     t('PackIns/DateOfPreparationOrRevision/PreparationOrRevision/Version/Lang'))
 
       @n3 << triple("pi:PI_0_2", "pio:sccj_no", t('PackIns/Sccj/SccjNo'))
@@ -789,15 +803,15 @@ module PI # package insert
       @n3 << triple("pi:PI_0_5", "pio:therapeutic_classification",
                     t('//TherapeuticClassification/Detail/Lang'))
 
-      @n3 << triple("pi_root:#{@pino}", "pio:approval_brand_name",
+      @n3 << triple("pi:PI_0_7", "pio:approval_brand_name",
                     t('//ApprovalEtc/DetailBrandName/ApprovalBrandName/Lang'))
       @n3 << triple("pi_root:#{@pino}", "pio:yj_code",
                     t('//ApprovalEtc/DetailBrandName/BrandCode/YJCode'))
 
-      @n3 << triple("pi_root:#{@pino}", "pio:trademark_name",
+      @n3 << triple("pi:PI_0_7", "pio:trademark_name",
                     t('//DetailBrandName/TrademarkInEnglish/TrademarkName'))
 
-      @n3 << triple("pi_root:#{@pino}", "pio:name_in_hiragana", 
+      @n3 << triple("pi:PI_0_7", "pio:name_in_hiragana", 
                     t('//DetailBrandName/BrandNameInHiragana/NameInHiragana'))
       @n3 << triple("pi:PI_0_3_1", "pio:approval_no",
                     t('//DetailBrandName/ApprovalAndLicenseNo/ApprovalNo'))
@@ -807,7 +821,7 @@ module PI # package insert
                     "#{t('//DetailBrandName/StartingDateOfMarketing')}^^xsd:date")
       @n3 << triple("pi:PI_0_4", "pio:storage_method",
                     t('//DetailBrandName/Storage/StorageMethod/Lang'))
-      @n3 << triple("pi_root:#{@pino}", "pio:shelf_life",
+      @n3 << triple("pi:PI_0_7", "pio:shelf_life",
                     t('//DetailBrandName/Storage/ShelfLife/Lang'))
 
       @n3
@@ -833,7 +847,7 @@ module PI # package insert
     def rdf
       section_elm  = @xml.elements["//#{s[section]}"]
       unless section_elm == nil
-        @n3 << triple(subj, "a", "pio:#{section}")
+#        @n3 << triple(subj, "a", "pio:#{section}")
         @n3 = @n3 + various_forms_wo_id_type_rdf(various_forms_wo_id_type(section_elm), subj)
       end
       @n3
@@ -859,7 +873,7 @@ module PI # package insert
     def rdf
       section_elm = @xml.elements["//#{s[section]}"]
       unless section_elm == nil
-        @n3 << triple(@subj, "a", "pio:#{section}")
+#        @n3 << triple(@subj, "a", "pio:#{section}")
         @n3 = @n3 + various_forms_wo_id_type_rdf(various_forms_wo_id_type(section_elm), subj)
       end
       @n3
@@ -883,7 +897,7 @@ module PI # package insert
     def rdf
       section_elm = @xml.elements["//#{s[section]}"]
       unless section_elm == nil
-        @n3 << triple(@subj, "a", "pio:#{section}")
+#        @n3 << triple(@subj, "a", "pio:#{section}")
         section_elm.each_element do |elm|
           m = symbol(elm)
           case m
@@ -926,14 +940,8 @@ module PI # package insert
     def composition_rdf(e)
       subj = "pi:PI_3_1"
       i = 1
-#      @n3 << triple(subj, "a", "pio:PI_3_1") 
       e.each do |k, v|
-        STDERR.print ">>>>>\n"
-        STDERR.print "#{k}\n"
-        STDERR.print "#{v.size}\n"
-        STDERR.print ">>>>>\n"
         if k == :composition_for_brand
-#          @n3 << triple(subj, "pio:composition_for_brand", "#{subj}.item#{i}")
           v.each do |elm|
             @n3 << triple(subj, "pio:composition_for_brand", "#{subj}.item#{i}")
             contained_amount = elm[:composition_for_constituent_units][0][:composition_table][0][:contained_amount][0]
@@ -1041,7 +1049,7 @@ module PI # package insert
         end
       end
       if e == nil
-        @n3 << triple("#{subj}.item#{i}", "a", "pio:PI_3_1")
+#        @n3 << triple("#{subj}.item#{i}", "a", "pio:PI_3_1")
       end
     end
 
@@ -1065,7 +1073,7 @@ module PI # package insert
     def property_rdf(e)
       subj = "pi:PI_3_2"
       i = 0
-      @n3 << triple(subj, "a", "pio:PI_3_2")
+#      @n3 << triple(subj, "a", "pio:PI_3_2")
       e.each do |k, v|
 #        @n3 << triple(subj, "pio:", "#{subj}.item#{i}")
 
@@ -1495,7 +1503,7 @@ module PI # package insert
     def rdf
       section_elm = @xml.elements["//#{s[section]}"]
       unless section_elm == nil
-        @n3 << triple(subj, "a", "pio:#{section}")
+#        @n3 << triple(subj, "a", "pio:#{section}")
         case section_elm.attributes["wordingPatternOfIndications"]
         when '1'
           @n3 << triple(subj, 'dct:title', '"効能又は効果"@ja')
@@ -1528,7 +1536,7 @@ module PI # package insert
 
     def rdf
       unless @xml.elements['//EfficacyRelatedPrecautions'] == nil
-        @n3 << triple(subj, "a", "pio:#{section}")
+#        @n3 << triple(subj, "a", "pio:#{section}")
         case @xml.elements['//EfficacyRelatedPrecautions'].attributes["wordingPatternOfEfficacyRelatedPrecautions"]
         when '1'
           @n3 << triple(subj, 'dct:title', '"効能又は効果に関連する注意"@ja')
@@ -1558,7 +1566,7 @@ module PI # package insert
 
     def rdf
       unless @xml.elements['//InfoDoseAdmin'] == nil
-        @n3 << triple(subj, "a", "pio:#{section}")
+#        @n3 << triple(subj, "a", "pio:#{section}")
         case @xml.elements['//InfoDoseAdmin'].attributes["wordingPatternOfDoseAdmin"]
         when '1'
           @n3 << triple(subj, 'dct:title', '"用法及び用量"@ja')
@@ -1593,7 +1601,7 @@ module PI # package insert
 
     def rdf
       unless @xml.elements['//InfoPrecautionsDosage'] == nil
-        @n3 << triple(subj, 'a', "pio:#{section}")
+#        @n3 << triple(subj, "a", "pio:#{section}")
         case @xml.elements['//InfoPrecautionsDosage'].attributes["wordingPatternOfInfoPrecautionsDosage"]
         when '1'
           @n3 << triple(subj, 'dct:title', '"用法及び用量に関連する注意"@ja')
@@ -1708,7 +1716,7 @@ module PI # package insert
 
     def contra_indicated_combinations_rdf(ary)
       subj = "pi:PI_10_1"
-      @n3 << triple(subj, "a", "pio:PI_10_1")
+#      @n3 << triple(subj, "a", "pio:PI_10_1")
       ary.each do |e|
         e[:contra_indication][:drug].each.with_index(1) do |drug, i|
           drug.to_a.each do |k, v|
@@ -1720,7 +1728,9 @@ module PI # package insert
                 v[:simple_list][0].each do |drug_name|
                   if drug_name[:detail][0][0].key?(:attr) && drug_name[:detail][0][0][:attr].key?("ref")
                   elsif drug_name[:detail][0][0].key?(:text)
-                    @n3 << triple("#{subj}.item#{i}", "pio:drug_name", "\"#{drug_name[:detail][0][0][:text]}\"@ja")
+#                    unless /^\S+$/ =~ drug_name[:detail][0][0][:text]
+                      @n3 << triple("#{subj}.item#{i}", "pio:drug_name", "\"#{drug_name[:detail][0][0][:text]}\"@ja")
+#                    end
                   end
                 end
               end
@@ -1753,7 +1763,7 @@ module PI # package insert
 
     def precautions_for_combinations_rdf(ary)
       subj = "pi:PI_10_2"
-      @n3 << triple(subj, "a", "pio:PI_10_2")
+#      @n3 << triple(subj, "a", "pio:PI_10_2")
       ary.each do |e|
         e[:precautions_for_combi][:drug].each.with_index(1) do |drug, i|
           drug.to_a.each do |k, v|
@@ -1765,7 +1775,9 @@ module PI # package insert
                 v[:simple_list][0].each do |drug_name|
                   if drug_name[:detail][0][0].key?(:attr) && drug_name[:detail][0][0][:attr].key?("ref")
                   elsif drug_name[:detail][0][0].key?(:text)
-                    @n3 << triple("#{subj}.item#{i}", "pio:drug_name", "\"#{drug_name[:detail][0][0][:text]}\"@ja")
+                    unless /^\S+$/ =~ drug_name[:detail][0][0][:text]
+                      @n3 << triple("#{subj}.item#{i}", "pio:drug_name", "\"#{drug_name[:detail][0][0][:text]}\"@ja")
+                    end
                   end
                 end
               end
@@ -1945,7 +1957,7 @@ module PI # package insert
 
     def other_adverse_events_rdf(a)
       subj = "pi:PI_11_2"
-      @n3 << triple(subj, "a", "pio:PI_11_2")
+#      @n3 << triple(subj, "a", "pio:PI_11_2")
       a.each.with_index(1) do |h, i|
         s = "#{subj}.item#{i}"
         @n3 << triple(subj, "pio:section", s)
@@ -2250,7 +2262,7 @@ module PI # package insert
 
     def rdf
       unless @xml.elements['//EfficacyPharmacology'] == nil
-        @n3 << triple(subj, "a", "pio:#{section}")
+#        @n3 << triple(subj, "a", "pio:#{section}")
 
         i = 0
         @xml.elements['//EfficacyPharmacology'].each_element do |elm|
@@ -2296,7 +2308,7 @@ module PI # package insert
 
     def rdf
       unless @xml.elements['//PhyschemOfActIngredients'] == nil
-        @n3 << triple(subj, "a", "pio:#{section}")
+#        @n3 << triple(subj, "a", "pio:#{section}")
         unless @xml.elements['//PhyschemOfActIngredientsSection'] == nil
           @n3 = @n3 + physchem_of_act_ingredients_section(@xml.elements['//PhyschemOfActIngredientsSection'])
         end
@@ -2339,7 +2351,7 @@ module PI # package insert
 
     def rdf
       unless @xml.elements['//PrecautionsForHandling'] == nil
-        @n3 << triple(subj, "a", "pio:#{section}")
+#        @n3 << triple(subj, "a", "pio:#{section}")
         @n3 = @n3 + various_forms_wo_id_type_rdf(various_forms_wo_id_type(@xml.elements['//PrecautionsForHandling']), subj)
       end
       @n3
